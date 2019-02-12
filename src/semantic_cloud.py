@@ -29,6 +29,20 @@ import torch
 from ptsemseg.models import get_model
 from ptsemseg.utils import convert_state_dict
 
+# SUNRGBD
+labels_sunrgbd = ['backgroud', 'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf',
+        'picture', 'counter', 'blinds', 'desk', 'shelves', 'curtain', 'dresser', 'pillow', 'mirror',
+        'floor_mat', 'clothes', 'ceiling', 'books', 'fridge', 'tv', 'paper', 'towel', 'shower_curtain',
+        'box', 'whiteboard', 'person', 'night_stand', 'toilet', 'sink', 'lamp', 'bathtub', 'bag']
+
+# Pascal VOC
+labels_pascal = ['background','aeroplane','bicycle','bird','boat','bottle','bus','car','cat','chair','cow','diningtable','dog',
+        'horse','motorbike','person','pottedplant','sheep','sofa','train','tvmonitor']
+
+# ADE20K
+# Reference: https://github.com/CSAILVision/sceneparsing/blob/master/objectInfo150.txt
+labels_ade20k = ['wall', 'building', 'sky', 'floor', 'tree', 'ceiling', 'road', 'bed ', 'windowpane', 'grass', 'cabinet', 'sidewalk', 'person', 'earth', 'door', 'table', 'mountain', 'plant', 'curtain', 'chair', 'car', 'water', 'painting', 'sofa', 'shelf', 'house', 'sea', 'mirror', 'rug', 'field', 'armchair', 'seat', 'fence', 'desk', 'rock', 'wardrobe', 'lamp', 'bathtub', 'railing', 'cushion', 'base', 'box', 'column', 'signboard', 'chest of drawers', 'counter', 'sand', 'sink', 'skyscraper', 'fireplace', 'refrigerator', 'grandstand', 'path', 'stairs', 'runway', 'case', 'pool table', 'pillow', 'screen door', 'stairway', 'river', 'bridge', 'bookcase', 'blind', 'coffee table', 'toilet', 'flower', 'book', 'hill', 'bench', 'countertop', 'stove', 'palm', 'kitchen island', 'computer', 'swivel chair', 'boat', 'bar', 'arcade machine', 'hovel', 'bus', 'towel', 'light', 'truck', 'tower', 'chandelier', 'awning', 'streetlight', 'booth', 'television', 'airplane', 'dirt track', 'apparel', 'pole', 'land', 'bannister', 'escalator', 'ottoman', 'bottle', 'buffet', 'poster', 'stage', 'van', 'ship', 'fountain', 'conveyer belt', 'canopy', 'washer', 'plaything', 'swimming pool', 'stool', 'barrel', 'basket', 'waterfall', 'tent', 'bag', 'minibike', 'cradle', 'oven', 'ball', 'food', 'step', 'tank', 'trade name', 'microwave', 'pot', 'animal', 'bicycle', 'lake', 'dishwasher', 'screen', 'blanket', 'sculpture', 'hood', 'sconce', 'vase', 'traffic light', 'tray', 'ashcan', 'fan', 'pier', 'crt screen', 'plate', 'monitor', 'bulletin board', 'shower', 'radiator', 'glass', 'clock', 'flag']
+
 def color_map(N=256, normalized=False):
     """
     Return Color Map in PASCAL VOC format (rgb)
@@ -106,18 +120,18 @@ class SemanticCloud:
             # Set device
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             # Get dataset
-            dataset = rospy.get_param('/semantic_pcl/dataset')
+            self.dataset = rospy.get_param('/semantic_pcl/dataset')
             # Setup model
             model_name ='pspnet'
             model_path = rospy.get_param('/semantic_pcl/model_path')
-            if dataset == 'sunrgbd': # If use version fine tuned on sunrgbd dataset
+            if self.dataset == 'sunrgbd': # If use version fine tuned on sunrgbd dataset
                 self.n_classes = 38 # Semantic class number
                 self.model = get_model(model_name, self.n_classes, version = 'sunrgbd_res50')
                 state = torch.load(model_path)
                 self.model.load_state_dict(state)
                 self.cnn_input_size = (321, 321)
                 self.mean = np.array([104.00699, 116.66877, 122.67892]) # Mean value of dataset
-            elif dataset == 'ade20k':
+            elif self.dataset == 'ade20k':
                 self.n_classes = 150 # Semantic class number
                 self.model = get_model(model_name, self.n_classes, version = 'ade20k')
                 state = torch.load(model_path)
@@ -156,6 +170,17 @@ class SemanticCloud:
         else:
             self.image_sub = rospy.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
         print('Ready.')
+
+    def get_label(self,pred_label):
+        print(" ============= ")
+        unique_labels = np.unique(pred_label)
+        for color_index in unique_labels:
+            label = ''
+            if self.dataset == 'sunrgbd':
+                label = labels_sunrgbd[color_index]
+            elif self.dataset == 'ade20k':
+                label = labels_ade20k[color_index]
+            print("Label Name with index:" + str(color_index) + " is:" + label)
 
     def color_callback(self, color_img_ros):
         """
@@ -228,15 +253,15 @@ class SemanticCloud:
         """
         class_probs = self.predict(img)
         # Take best prediction and confidence
-        pred_confidence, pred_label = class_probs.max(1)
+        pred_confidence, pred_labels = class_probs.max(1)
         pred_confidence = pred_confidence.squeeze(0).cpu().numpy()
-        pred_label = pred_label.squeeze(0).cpu().numpy()
-        pred_label = resize(pred_label, (self.img_height, self.img_width), order = 0, mode = 'reflect', preserve_range = True) # order = 0, nearest neighbour
-        pred_label = pred_label.astype(np.int)
+        pred_labels = pred_labels.squeeze(0).cpu().numpy()
+        pred_labels = resize(pred_labels, (self.img_height, self.img_width), order = 0, mode = 'reflect', preserve_range = True) # order = 0, nearest neighbour
+        pred_labels = pred_labels.astype(np.int)
         # Add semantic color
-        print("Label is:",pred_label)
-        semantic_color = decode_segmap(pred_label, self.n_classes, self.cmap)
+        semantic_color = decode_segmap(pred_labels, self.n_classes, self.cmap)
         pred_confidence = resize(pred_confidence, (self.img_height, self.img_width),  mode = 'reflect', preserve_range = True)
+        self.get_label(pred_labels)
         return (semantic_color, pred_confidence)
 
     def predict_bayesian(self, img):
@@ -257,6 +282,7 @@ class SemanticCloud:
             self.semantic_colors[i] = decode_segmap(pred_labels_resized, self.n_classes, self.cmap)
         for i in range(pred_confidences.shape[0]):
             self.confidences[i] = resize(pred_confidences[i], (self.img_height, self.img_width),  mode = 'reflect', preserve_range = True)
+        self.get_label(pred_labels)
 
     def predict(self, img):
         """
@@ -282,7 +308,6 @@ class SemanticCloud:
             # Apply softmax to obtain normalized probabilities
             outputs = torch.nn.functional.softmax(outputs, 1)
             return outputs
-
 
 def main(args):
     rospy.init_node('semantic_cloud', anonymous=True)

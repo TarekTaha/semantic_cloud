@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatch
 import numpy as np
@@ -55,6 +56,8 @@ def draw_labels(n_classes, labels, labels_per_col, rect_width = 12, rect_height 
         col = i // labels_per_col
         row = i % labels_per_col
         rectangles[labels[i]] =  mpatch.Rectangle((col * rect_width, row * rect_height), rect_width, rect_height, facecolor = colors[i])
+        if i == 5:
+            print labels[i]
 
     for r in rectangles:
         ax.add_artist(rectangles[r])

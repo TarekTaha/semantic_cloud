@@ -1,9 +1,16 @@
 # Camera intrinsic matrix parameters (OpenCV)
 camera:
-  fx: 544.771755
-  fy: 546.966312
-  cx: 322.376103
-  cy: 245.357925
+  #fx: 544.771755
+  #fy: 546.966312
+  #cx: 322.376103
+  #cy: 245.357925
+
+  # The values below assume a perfect case in simulation/gazebo for the camera specifications in
+  # depth_camera_new.sdf, check https://bitbucket.org/osrf/sdformat/pull-requests/248/added-camera-intrinsics-fx-fy-cx-cy-s/activity
+  fx: 554.0
+  fy: 554.0
+  cx: 320.0
+  cy: 240.0
 
   width: 640
   height: 480
@@ -12,9 +19,10 @@ semantic_pcl:
   color_image_topic: "/camera/rgb/image_raw"
   #depth_image_topic: "/camera/depth_registered/image_raw"
   depth_image_topic: "/camera/depth/image_raw"
+  # point_type: 0 = color; 1 = SEMANTICS_MAX; 2 = SEMANTICS_BAYESIAN
   point_type: 1
   frame_id: "camera_link"
-  dataset: "ade20k" # sunrgbd
-  #dataset: "sunrgbd" # sunrgbd
+  dataset: "ade20k" # ade20k
   model_path: "/home/tataha/Downloads/semantic_trained_model/pspnet_50_ade20k.pth"
-  #model_path: "/home/interns/xuan/models/pspnet_sunrgbd_best_model180625_5k.pth"
+  #dataset: "sunrgbd" # sunrgbd
+  #model_path: "/home/tataha/Downloads/semantic_trained_model/pspnet_sunrgbd_best_model180625_5k.pth"

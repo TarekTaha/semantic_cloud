@@ -135,6 +135,11 @@ class ColorPclGenerator:
         self.cloud_ros.header.stamp = stamp
         return self.cloud_ros
 
+    def generate_cloud(bgr_img, depth_img, point_type):
+        stamp = self.cloud_ros.header.stamp
+        if point_type is PointType.SEMANTICS_BAYESIAN:
+            return generate_cloud_semantic_max
+
     def generate_cloud_color(self, bgr_img, depth_img, stamp):
         """
         Generate color point cloud
@@ -196,19 +201,19 @@ if __name__ == "__main__":
     plt.subplot(1,2,2), plt.imshow(depth_img), plt.title("depth")
     plt.draw()
     plt.pause(0.001)
-    # Declare color point cloud generator
-    cloud_gen = ColorPclGenerator(color_img.shape[1], color_img.shape[0])
     # Camera intrinsic matrix
     fx = 544.771755
     fy = 546.966312
     cx = 322.376103
     cy = 245.357925
     intrinsic = np.matrix([[fx, 0, cx], [0, fy, cy], [0, 0, 1]], dtype = np.float32)
+    # Declare color point cloud generator
+    cloud_gen = ColorPclGenerator(intrinsic,color_img.shape[1], color_img.shape[0])
     print("intrinsic matrix", intrinsic)
     # Generate point cloud and pulish ros message
     while not rospy.is_shutdown():
         since = time.time()
-        cloud_ros = cloud_gen.generate_cloud(color_img, depth_img, intrinsic)
+        cloud_ros = cloud_gen.generate_cloud_color(color_img, depth_img, cloud_gen.cloud_ros.header.stamp)
         pcl_pub.publish(cloud_ros)
         print("Generate and publish pcl took", time.time() - since)
     rospy.spin()

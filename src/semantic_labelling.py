@@ -115,7 +115,7 @@ class SemanticCloud:
         else:
             print("Invalid point type.")
             return
-        semantic_colored_labels_srv = rospy.Service('get_semantic_colored_labels', GetSemanticColoredLabels, self.get_semantic_colored_labels)
+
         # Get image size
         self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
         # Set up CNN is use semantics
@@ -173,6 +173,8 @@ class SemanticCloud:
             self.cloud_generator = ColorPclGenerator(intrinsic, self.img_width,self.img_height, frame_id , self.point_type)
         else:
             self.image_sub = rospy.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
+
+        semantic_colored_labels_srv = rospy.Service('get_semantic_colored_labels', GetSemanticColoredLabels, self.get_semantic_colored_labels)
         print('Ready.')
 
     def get_semantic_colored_labels(self,GetSemanticColoredLabels):

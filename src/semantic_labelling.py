@@ -29,6 +29,9 @@ import torch
 from ptsemseg.models import get_model
 from ptsemseg.utils import convert_state_dict
 
+from semantic_cloud.msg import *
+from semantic_cloud.srv import *
+
 # SUNRGBD
 labels_sunrgbd = ['backgroud', 'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf',
         'picture', 'counter', 'blinds', 'desk', 'shelves', 'curtain', 'dresser', 'pillow', 'mirror',
@@ -112,6 +115,7 @@ class SemanticCloud:
         else:
             print("Invalid point type.")
             return
+        semantic_colored_labels_srv = rospy.Service('get_semantic_colored_labels', GetSemanticColoredLabels, self.get_semantic_colored_labels)
         # Get image size
         self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
         # Set up CNN is use semantics
@@ -170,6 +174,22 @@ class SemanticCloud:
         else:
             self.image_sub = rospy.Subscriber(rospy.get_param('/semantic_pcl/color_image_topic'), Image, self.color_callback, queue_size = 1, buff_size = 30*480*640)
         print('Ready.')
+
+    def get_semantic_colored_labels(self,GetSemanticColoredLabels):
+        SemanticColoredLabels
+        for i in range(0,self.n_classes):
+            scl = SemanticColoredLabel()
+            if self.dataset == 'sunrgbd':
+                label = labels_sunrgbd[i]
+            elif self.dataset == 'ade20k':
+                label = labels_ade20k[i]
+            scl.label = label
+            scl.color_r = cmap[i,0]
+            scl.color_g = cmap[i,0]
+            scl.color_b = cmap[i,0]
+
+        GetSemanticColoredLabels
+        return
 
     def get_label(self,pred_label):
         print(" ============= ")

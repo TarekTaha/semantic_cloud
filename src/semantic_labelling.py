@@ -176,7 +176,9 @@ class SemanticCloud:
         print('Ready.')
 
     def get_semantic_colored_labels(self,GetSemanticColoredLabels):
-        SemanticColoredLabels
+        print("Service called")
+        ret  = GetSemanticColoredLabelsResponse()
+        scls = []
         for i in range(0,self.n_classes):
             scl = SemanticColoredLabel()
             if self.dataset == 'sunrgbd':
@@ -184,12 +186,12 @@ class SemanticCloud:
             elif self.dataset == 'ade20k':
                 label = labels_ade20k[i]
             scl.label = label
-            scl.color_r = cmap[i,0]
-            scl.color_g = cmap[i,0]
-            scl.color_b = cmap[i,0]
-
-        GetSemanticColoredLabels
-        return
+            scl.color_r = self.cmap[i,0]
+            scl.color_g = self.cmap[i,1]
+            scl.color_b = self.cmap[i,2]
+            scls.append(scl)
+        ret = scls
+        return ret
 
     def get_label(self,pred_label):
         print(" ============= ")

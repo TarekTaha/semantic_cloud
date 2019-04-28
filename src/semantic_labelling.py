@@ -31,6 +31,8 @@ from ptsemseg.utils import convert_state_dict
 
 from semantic_cloud.msg import *
 from semantic_cloud.srv import *
+from jsk_rviz_plugins.msg import *
+from std_msgs.msg import ColorRGBA, Float32
 
 # SUNRGBD
 labels_sunrgbd = ['backgroud', 'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf',
@@ -115,7 +117,10 @@ class SemanticCloud:
         else:
             print("Invalid point type.")
             return
-
+        self.real_sense  = rospy.get_param('/semantic_pcl/real_sense')
+        self.labels_pub  = rospy.Publisher("/semantic_pcl/labels", OverlayText, queue_size=1)
+        self.labels_list = []
+        self.text = OverlayText()
         # Get image size
         self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
         # Set up CNN is use semantics
@@ -198,13 +203,30 @@ class SemanticCloud:
     def get_label(self,pred_label):
         print(" ============= ")
         unique_labels = np.unique(pred_label)
+        count = 0
+        
+        self.text.width = 200
+        self.text.height = 800
+        self.text.left = 10
+        self.text.top = 10 + 20* count       
+        self.text.text_size = 12
+        self.text.line_width = 2 
+        self.text.font = "DejaVu Sans Mono"
+        self.text.fg_color = ColorRGBA(25 / 255.0, 1.0, 240.0 / 255.0, 1.0)
+        self.text.bg_color = ColorRGBA(255,255,255, 0.5)
         for color_index in unique_labels:
             label = ''
             if self.dataset == 'sunrgbd':
                 label = labels_sunrgbd[color_index]
             elif self.dataset == 'ade20k':
                 label = labels_ade20k[color_index]
-            print("Label Name with index:" + str(color_index) + " is:" + label)
+            count+=1
+            if not label in self.labels_list:
+                self.labels_list.append(label)
+                self.text.text += """<span style="color: rgb(%d,%d,%d);">%s</span>
+                """ % (self.cmap[color_index,0],self.cmap[color_index,1], self.cmap[color_index,2],label.capitalize())
+            print("Published Label Name with index:" + str(color_index) + " is:" + label)
+        self.labels_pub.publish(self.text)
 
     def color_callback(self, color_img_ros):
         """
@@ -246,6 +268,9 @@ class SemanticCloud:
         if depth_img.shape[0] is not self.img_height or depth_img.shape[1] is not self.img_width:
             depth_img = resize(depth_img, (self.img_height, self.img_width), order = 0, mode = 'reflect', preserve_range = True) # order = 0, nearest neighbour
             depth_img = depth_img.astype(np.float32)
+            # realsense camera gives depth measurements in mm
+            if self.real_sense:
+                depth_img = depth_img /1000.0
         if self.point_type is PointType.COLOR:
             cloud_ros = self.cloud_generator.generate_cloud_color(color_img, depth_img, color_img_ros.header.stamp)
         else:

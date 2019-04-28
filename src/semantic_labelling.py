@@ -123,6 +123,8 @@ class SemanticCloud:
         self.text = OverlayText()
         # Get image size
         self.img_width, self.img_height = rospy.get_param('/camera/width'), rospy.get_param('/camera/height')
+	self.throttle_rate = rospy.get_param('/semantic_pcl/throttle_rate')
+	self.last_time = rospy.Time.now()
         # Set up CNN is use semantics
         if self.point_type is not PointType.COLOR:
             print('Setting up CNN model...')
@@ -258,6 +260,12 @@ class SemanticCloud:
         \param color_img_ros (sensor_msgs.Image) the input color image (bgr8)
         \param depth_img_ros (sensor_msgs.Image) the input depth image (registered to the color image frame) (float32) values are in meters
         """
+	tic = rospy.Time.now()
+	diff = tic -  self.last_time
+	print ("Diff:",diff.to_sec())
+        if diff.to_sec() < self.throttle_rate:
+		return
+	self.last_time = rospy.Time.now()
         # Convert ros Image message to numpy array
         try:
             color_img = self.bridge.imgmsg_to_cv2(color_img_ros, "bgr8")
@@ -288,6 +296,7 @@ class SemanticCloud:
             if self.sem_img_pub.get_num_connections() > 0:
                 if self.point_type is PointType.SEMANTICS_MAX:
                     semantic_color_msg = self.bridge.cv2_to_imgmsg(semantic_color, encoding="bgr8")
+                    #cvtColor(semantic_color_msg, semantic_color_msg, BGR2RGB);
                 else:
                     semantic_color_msg = self.bridge.cv2_to_imgmsg(self.semantic_colors[0], encoding="bgr8")
                 self.sem_img_pub.publish(semantic_color_msg)

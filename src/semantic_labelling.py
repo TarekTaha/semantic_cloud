@@ -260,12 +260,12 @@ class SemanticCloud:
         \param color_img_ros (sensor_msgs.Image) the input color image (bgr8)
         \param depth_img_ros (sensor_msgs.Image) the input depth image (registered to the color image frame) (float32) values are in meters
         """
-	tic = rospy.Time.now()
-	diff = tic -  self.last_time
-	print ("Diff:",diff.to_sec())
+        tic = rospy.Time.now()
+        diff = tic -  self.last_time
         if diff.to_sec() < self.throttle_rate:
-		return
-	self.last_time = rospy.Time.now()
+            return
+	
+        self.last_time = rospy.Time.now()
         # Convert ros Image message to numpy array
         try:
             color_img = self.bridge.imgmsg_to_cv2(color_img_ros, "bgr8")

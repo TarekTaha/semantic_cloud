@@ -7,7 +7,7 @@ This package is tested with TensorFlow 2.0.0, CUDA 10.1, and Pytorch 1.4.
 Pytorch installation in python 2 and python 3 
 ### Python 2
 ```sh
-RUN pip install torch==1.4.0 torchvision==0.5.0 --no-cache-dir
+pip install torch==1.4.0 torchvision==0.5.0 --no-cache-dir
 ```
 ### Python 3
 ```sh
@@ -71,7 +71,7 @@ catkin build
 To test this package run the folowing launch file. 
 
 ```sh
-roslaunch semantic_exploration semantic_explorer.launch
+roslaunch semantic_cloud semantic_mapping.launch
 ```
 
 # Applications

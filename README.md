@@ -23,23 +23,6 @@ pip install setuptools==41.0.0
 pip install tensorflow==2.1.0
 pip install cntk
 pip install 'scikit-image<0.15'
-pip install Theano
-
-cd ~
-git clone https://github.com/Theano/libgpuarray.git
-cd libgpuarray
-git checkout tags/v0.6.5 -b v0.6.9
-mkdir Build
-cd Build
-cmake .. -DCMAKE_BUILD_TYPE=Release # or Debug if you are investigating a crash
-make
-sudo make install
-cd ..
-# for pygpu
-# This must be done after libgpuarray is installed as per instructions above.
-python setup.py build
-python setup.py install
-sudo ldconfig
 
 sudo apt-get install -y python-mako
 apt-get install -y libsm6 libxext6 libxrender-dev

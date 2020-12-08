@@ -1,34 +1,26 @@
 # semantic_cloud
-Semantically identifiy objects and create a 3D color coded cloud
+A ROS package which semantically identifies objects and creates/publishes a 3D color coded cloud
 
 ## Installation
-This package is tested with TensorFlow 2.0.0, CUDA 10.1, and Pytorch 1.4.  
+This package is tested with Ubuntu 18, ROS melodic, TensorFlow 2.0.0, CUDA 10.1, and Pytorch 1.4.  
 
 Pytorch installation in python 2 and python 3 
 ### Python 2
 ```sh
-pip install torch==1.4.0 torchvision==0.5.0 --no-cache-dir
+pip install --user torch==1.4.0 torchvision==0.5.0 --no-cache-dir
 ```
 ### Python 3
 ```sh
-pip3 install torch==1.4.0 torchvision==0.5.0 --no-cache-dir
+pip3 install --user torch==1.4.0 torchvision==0.5.0 --no-cache-dir
 ```
 
 Some required packges/modules`
 ```sh
-pip install opencv-python==4.2.0.32
-pip install Keras==2.3.1
-pip install launchpadlib==1.10.6
 pip install setuptools==41.0.0
-pip install tensorflow==2.1.0
-pip install cntk
-pip install 'scikit-image<0.15'
+pip install opencv-python==4.2.0.32
 
-sudo apt-get install -y python-mako
-apt-get install -y libsm6 libxext6 libxrender-dev
-
-# Required for semantic_cloud
-echo "arrow" | sudo -S apt-get install ros-melodic-jsk-rviz-plugins -y
+# Required for semantic_cloud, assuming ROS melodic
+sudo apt-get install ros-melodic-jsk-rviz-plugins -y
 ```
 
 
